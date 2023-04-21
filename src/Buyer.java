@@ -32,12 +32,12 @@ public class Buyer extends Agent{
             e.printStackTrace();
         }
 
-        System.out.println(getAID().getName() + " veut acheter un produit et il a un budget de " + budget + " dollars.");
+        System.out.println(getAID().getName() + " veut acheter le produit et il a un budget de " + budget + " dollars.");
     }
 
     private void setRandPrice() {
         int min = 1000;
-        int max = Integer.MAX_VALUE;
+        int max = 10000;
 
         budget = ThreadLocalRandom.current().nextInt(min, max);
     }
@@ -85,10 +85,10 @@ public class Buyer extends Agent{
         }
 
         private void parseContent(String content) {
-            String[] split = content.split("\\|\\|");
+            String[] string = content.split("\\;");
 
-            product = split[0];
-            actualProductPrice = Integer.parseInt(split[1]);
+            product = string[0];
+            actualProductPrice = Integer.parseInt(string[1]);
         }
 
         @Override

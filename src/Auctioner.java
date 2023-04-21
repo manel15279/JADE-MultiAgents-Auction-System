@@ -18,6 +18,7 @@ public class Auctioner extends Agent{
     private AID[] buyers;
     private String product;
     private Integer initialPrice;
+    private Integer reservePrice;
 
     @Override
     protected void setup() {
@@ -27,7 +28,8 @@ public class Auctioner extends Agent{
         if (args != null && args.length > 0) {
             product = (String) args[0];
             initialPrice = Integer.parseInt((String) args[1]);
-            System.out.println("Produit en vente : \"" + product + "\" au prix de " + initialPrice + " dollars.");
+            reservePrice = Integer.parseInt((String) args[2]);
+            System.out.println("Produit en vente : " + product + " au prix de " + initialPrice + " dollars.");
 
             addBehaviour(new OneShotBehaviour() {
                 @Override
@@ -43,7 +45,6 @@ public class Auctioner extends Agent{
 
                         buyers = new AID[result.length];
                         for (int i = 0; i < result.length; i++) {
-                            //System.out.println("Na�en kupac: " + result[i].getName());
                             buyers[i] = result[i].getName();
                         }
                     } catch (FIPAException e) {
@@ -85,9 +86,9 @@ public class Auctioner extends Agent{
                     }
 
                     if (maxBuyer != null) {
-                        cfp.setContent(product + "||" + maxOffer);
+                        cfp.setContent(product + ";" + maxOffer);
                     } else {
-                        cfp.setContent(product + "||" + initialPrice);
+                        cfp.setContent(product + ";" + initialPrice);
                     }
 
                     cfp.setConversationId("Enchere");
@@ -146,7 +147,7 @@ public class Auctioner extends Agent{
 
                     ACLMessage accept = new ACLMessage(ACLMessage.ACCEPT_PROPOSAL);
                     accept.addReceiver(maxBuyer);
-                    accept.setContent(product + "||" + maxOffer);
+                    accept.setContent(product + ";" + maxOffer);
                     accept.setConversationId("Enchère");
                     accept.setReplyWith("Offre acceptée" + System.currentTimeMillis());
                     myAgent.send(accept);
@@ -157,7 +158,7 @@ public class Auctioner extends Agent{
                             .forEach(aid -> {
                                 ACLMessage reject = new ACLMessage(ACLMessage.REJECT_PROPOSAL);
                                 reject.addReceiver(maxBuyer);
-                                reject.setContent(product + "||" + offers.get(aid));
+                                reject.setContent(product + ";" + offers.get(aid));
                                 reject.setConversationId("Enchère");
                                 reject.setReplyWith("Offre rejetée" + System.currentTimeMillis());
 
@@ -172,7 +173,7 @@ public class Auctioner extends Agent{
                     System.out.println("Est ce que quelqu un propose plus ?");
 
                     if (noOffers != 0) {
-                        System.out.println(maxOffer + " dollars " + noOffers + "fois.");
+                        System.out.println(maxOffer + " dollars " + noOffers + " fois.");
                     }
 
                     if (noOffers == 3) {
@@ -183,7 +184,10 @@ public class Auctioner extends Agent{
                     break;
 
                 case 4:
-                    System.out.println("Produit vendu au client " + maxBuyer.getName() + " à " + maxOffer + " dollars.");
+                    if(maxOffer > reservePrice)
+                        System.out.println("Prix de réserve atteint, produit vendu au client " + maxBuyer.getName() + " à " + maxOffer + " dollars.");
+                    else
+                        System.out.println("Prix de réserve non-atteint.");
 
                     step = 5;
                     break;
