@@ -34,7 +34,7 @@ public class Auctioner extends Agent{
             addBehaviour(new OneShotBehaviour() {
                 @Override
                 public void action() {
-
+                    //récuperer les agents acheteurs
                     DFAgentDescription template = new DFAgentDescription();
                     ServiceDescription sd = new ServiceDescription();
                     sd.setType("Buyer");
@@ -64,7 +64,7 @@ public class Auctioner extends Agent{
     private class Performer extends Behaviour {
         private int step = 0;
         private Map<AID, Integer> offers = new HashMap<>();
-        private int num = 0;
+        private int num = 0; //compter le nbr d'acheteur a qui l'agent a envoyer un CFP
         private MessageTemplate mt;
         private AID maxBuyer = null;
         private int maxOffer = 0;
@@ -74,6 +74,7 @@ public class Auctioner extends Agent{
         public void action() {
             switch (step) {
                 case 0:
+                    // l'agent envoie un Call for Proposal à tous les acheteurs, sauf à l'acheteur ayant fait l'offre la plus élevée précédemment.
                     offers = new HashMap<>();
                     num = 0;
                     ACLMessage cfp = new ACLMessage(ACLMessage.CFP);
@@ -84,7 +85,7 @@ public class Auctioner extends Agent{
                             num++;
                         }
                     }
-
+                    // set actualproductprice
                     if (maxBuyer != null) {
                         cfp.setContent(product + ";" + maxOffer);
                     } else {
@@ -104,6 +105,7 @@ public class Auctioner extends Agent{
                     break;
 
                 case 1:
+                    // l'agent recoit les réponses des acheteurs et les traite (PROPOSE/REFUSE)
                     ACLMessage reply = myAgent.receive(mt);
 
                     if (reply != null) {
@@ -130,6 +132,7 @@ public class Auctioner extends Agent{
                     break;
 
                 case 2:
+                    //l'agent détermine l'acheteur ayant fait l'offre la plus élevée et envoie des message ACCEPT_PROPOSAL et REJECT_PROPOSAL.
                     Iterator<Map.Entry<AID, Integer>> iterator = offers.entrySet().iterator();
                     while (iterator.hasNext()) {
                         Map.Entry<AID, Integer> item = iterator.next();
@@ -161,7 +164,6 @@ public class Auctioner extends Agent{
                                 reject.setContent(product + ";" + offers.get(aid));
                                 reject.setConversationId("Enchère");
                                 reject.setReplyWith("Offre rejetée" + System.currentTimeMillis());
-
                                 myAgent.send(reject);
                             });
 
@@ -169,7 +171,7 @@ public class Auctioner extends Agent{
                     break;
 
                 case 3:
-
+                    //l'agent vérifie le nbr de REFUSE reçus. Si nbr = 3, l'enchère se termine. Sinon, il revient à l'étape 0 pour une nouvelle itération.
                     System.out.println("Est ce que quelqu un propose plus ?");
 
                     if (noOffers != 0) {
@@ -184,6 +186,7 @@ public class Auctioner extends Agent{
                     break;
 
                 case 4:
+                    // comparer l'offre la plus élevée au prix de réserve
                     if(maxOffer > reservePrice)
                         System.out.println("Prix de réserve atteint, produit vendu au client " + maxBuyer.getName() + " à " + maxOffer + " dollars.");
                     else
